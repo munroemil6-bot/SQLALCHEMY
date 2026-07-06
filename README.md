@@ -460,4 +460,38 @@ python3 -m flask db downgrade
 
 It undoes the last migration.
 
+# Adding a New Column Through Migrations
+
+If you want to add a new column to a table, edit the model first.
+
+Example:
+
+```python
+class Member(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(120))
+```
+
+Then create and apply the migration:
+
+```bash
+cd project
+python3 -m flask db migrate -m "Add email to member"
+python3 -m flask db upgrade
+```
+
+After that, you can use the new column in the shell:
+
+```bash
+cd project
+python3 -m flask shell
+```
+
+```python
+member = Member.query.first()
+member.email = 'myles@example.com'
+db.session.commit()
+```
+
 
