@@ -1,0 +1,22 @@
+:root{
+  --green-900: #064e3b;
+  --green-700: #047857;
+  --green-500: #10b981;
+  --green-300: #6ee7b7;
+  --green-100: #d1fae5;
+}
+
+body{
+  background: linear-gradient(180deg, var(--green-100), white);
+}
+
+.brand-bg{
+  background: linear-gradient(90deg, var(--green-900), var(--green-700));
+}
+
+.card{ border-color: rgba(16,185,129,0.2); }
+
+.badge-accent{ background: var(--green-500); color: white; }
+.badge-muted{ background: var(--green-300); color: #064e3b; }
+
+.list-group-item{ border-left: 4px solid var(--green-300); }
