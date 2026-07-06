@@ -1,8 +1,19 @@
 import os
 from flask import Flask
+from sqlalchemy import inspect
+
 from config import Config
 from extensions import db, migrate
 from models import Author, Genre, Book, Member, Loan
+
+
+def table_has_column(model, column_name):
+    try:
+        inspector = inspect(db.engine)
+        columns = {column['name'] for column in inspector.get_columns(model.__tablename__)}
+        return column_name in columns
+    except Exception:
+        return False
 
 
 def create_app():
@@ -24,6 +35,10 @@ def create_app():
 
 
 def seed_data():
+    if not table_has_column(Member, 'phone'):
+        print('Skipping seed data until the database schema includes the latest Member columns.')
+        return
+
     # idempotent get-or-create helpers
     def get_or_create(model, defaults=None, **kwargs):
         instance = model.query.filter_by(**kwargs).first()
