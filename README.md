@@ -186,6 +186,32 @@ if loan:
     db.session.commit()
 ```
 
+### Add or delete from any table
+
+Use the same pattern for every model:
+
+```python
+# Create
+new_item = Author(name='New Author')
+db.session.add(new_item)
+db.session.commit()
+
+# Read by ID
+item = Author.query.get(1)
+
+# Update
+if item:
+    item.name = 'Updated Name'
+    db.session.commit()
+
+# Delete
+if item:
+    db.session.delete(item)
+    db.session.commit()
+```
+
+You can replace `Author` with `Book`, `Genre`, `Member`, or `Loan`.
+
 Notes
 - The app seeds example Authors, Genres, Books, Members, and a Loan on first run. Seeding is idempotent and will not create duplicates.
 - Database file: `project/instance/library.db`.
@@ -492,96 +518,6 @@ python3 -m flask shell
 member = Member.query.first()
 member.email = 'myles@example.com'
 db.session.commit()
-```
-
-# Adding and Deleting Records for All Tables
-
-## Add an Author
-
-```python
-author = Author(name='George R. R. Martin')
-db.session.add(author)
-db.session.commit()
-```
-
-## Add a Genre
-
-```python
-genre = Genre(name='Historical Fiction')
-db.session.add(genre)
-db.session.commit()
-```
-
-## Add a Book
-
-```python
-author = Author.query.filter_by(name='George R. R. Martin').first()
-book = Book(title='A Song of Ice and Fire', author=author)
-db.session.add(book)
-db.session.commit()
-```
-
-## Add a Member
-
-```python
-member = Member(name='Myles')
-db.session.add(member)
-db.session.commit()
-```
-
-## Add a Loan
-
-```python
-book = Book.query.filter_by(title='A Song of Ice and Fire').first()
-member = Member.query.filter_by(name='Myles').first()
-loan = Loan(book=book, member=member)
-db.session.add(loan)
-db.session.commit()
-```
-
-## Delete an Author
-
-```python
-author = Author.query.get(1)
-if author:
-    db.session.delete(author)
-    db.session.commit()
-```
-
-## Delete a Genre
-
-```python
-genre = Genre.query.get(1)
-if genre:
-    db.session.delete(genre)
-    db.session.commit()
-```
-
-## Delete a Book
-
-```python
-book = Book.query.get(1)
-if book:
-    db.session.delete(book)
-    db.session.commit()
-```
-
-## Delete a Member
-
-```python
-member = Member.query.get(1)
-if member:
-    db.session.delete(member)
-    db.session.commit()
-```
-
-## Delete a Loan
-
-```python
-loan = Loan.query.get(1)
-if loan:
-    db.session.delete(loan)
-    db.session.commit()
 ```
 
 
