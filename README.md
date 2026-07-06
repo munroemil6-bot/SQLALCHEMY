@@ -233,6 +233,8 @@ migrations/
 
 You never run `flask db init` again for this project.
 
+For this project, the earlier migration already exists and is stored in the migrations folder, so you can continue from the current setup.
+
 # Creating the Database (First Migration)
 
 Suppose your `models.py` currently contains:
@@ -279,6 +281,13 @@ python3 -m flask db upgrade
 ```
 
 Now your SQLite database actually contains those tables.
+
+For this project, the existing migration history is already in place and can be viewed with:
+
+```bash
+cd project
+python3 -m flask db history
+```
 
 # Changing Your Database Later
 
