@@ -21,16 +21,18 @@ Prerequisites:
 - Python 3.8+
 - Create a virtualenv or use Pipenv
 
-Install dependencies:
+Install dependencies (from the project folder):
 
 ```bash
-python3 -m pip install -r project/requirements.txt
+cd project
+python3 -m pip install -r requirements.txt
 ```
 
 Run the app (creates the SQLite DB in `project/instance/library.db` and seeds example data):
 
 ```bash
-python3 project/app.py
+cd project
+python3 app.py
 ```
 
 Open http://127.0.0.1:5001/ in your browser.
@@ -101,11 +103,11 @@ nothing is saved.
 
 ### Add data in the Flask shell
 
-Start the shell:
+Start the shell from the project folder:
 
 ```bash
 cd project
-flask shell
+python3 -m flask shell
 ```
 
 Then run these examples:
@@ -211,57 +213,242 @@ class Book(db.Model):
 
 Then Flask-Migrate detects the change and creates a migration file automatically.
 
-### How migrations work
+# First Time Setup (Only Once)
 
-1. **Initial setup** (one time):
-   ```bash
-   cd project
-   python init_migrations.py
-   ```
-
-2. **Create a migration** (whenever you change a model):
-   ```bash
-   flask db migrate -m "Add ISBN to books"
-   ```
-
-   This creates a file in `migrations/versions/` that describes the schema change.
-
-3. **Apply the migration** (update your database):
-   ```bash
-   flask db upgrade
-   ```
-
-### Example: Add an `email` field to Member
-
-1. Modify `models.py`:
-   ```python
-   class Member(db.Model):
-       id = db.Column(db.Integer, primary_key=True)
-       name = db.Column(db.String(128), nullable=False)
-       email = db.Column(db.String(120), unique=True)  # NEW
-       loans = db.relationship('Loan', back_populates='member')
-   ```
-
-2. Create migration:
-   ```bash
-   flask db migrate -m "Add email to Member"
-   ```
-
-3. Apply migration:
-   ```bash
-   flask db upgrade
-   ```
-
-The migration is now tracked, and other developers or future versions of your app can run `flask db upgrade` to apply the same changes.
-
-### Useful commands
+### 1. Initialize migrations
 
 ```bash
-# Show migration history
-flask db history
-
-# Downgrade to a previous version
-flask db downgrade
+cd project
+python3 -m flask db init
 ```
+
+This creates:
+
+```text
+migrations/
+    env.py
+    script.py.mako
+    versions/
+```
+
+You never run `flask db init` again for this project.
+
+# Creating the Database (First Migration)
+
+Suppose your `models.py` currently contains:
+
+```python
+class Author(db.Model):
+    ...
+
+class Book(db.Model):
+    ...
+
+class Genre(db.Model):
+    ...
+
+class Member(db.Model):
+    ...
+
+class Loan(db.Model):
+    ...
+```
+
+### 2. Generate a migration
+
+```bash
+cd project
+python3 -m flask db migrate -m "Initial database"
+```
+
+Flask compares:
+
+```text
+models.py
+        ↓
+database
+```
+
+Since the database is empty, it creates instructions to build all the tables.
+
+### 3. Apply the migration
+
+```bash
+cd project
+python3 -m flask db upgrade
+```
+
+Now your SQLite database actually contains those tables.
+
+# Changing Your Database Later
+
+Suppose your `Member` model was originally:
+
+```python
+class Member(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+```
+
+Now you decide to add a phone number.
+
+Change it to:
+
+```python
+class Member(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+```
+
+Notice that you only edit the model. You do not write SQL.
+
+### Generate another migration
+
+```bash
+cd project
+python3 -m flask db migrate -m "Added phone to member"
+```
+
+Flask notices:
+
+```text
+Old Model
+
+id
+name
+
+↓
+
+New Model
+
+id
+name
+phone
+```
+
+It creates a migration file containing the equivalent of:
+
+```sql
+ALTER TABLE member
+ADD COLUMN phone;
+```
+
+### Apply it
+
+```bash
+cd project
+python3 -m flask db upgrade
+```
+
+Done. Your existing members remain. Only the new column is added.
+
+# What if I rename a column?
+
+Suppose
+
+```python
+name = db.Column(db.String(100))
+```
+
+becomes
+
+```python
+full_name = db.Column(db.String(100))
+```
+
+Run
+
+```bash
+cd project
+python3 -m flask db migrate -m "Rename member name"
+```
+
+Sometimes Flask-Migrate cannot automatically detect a rename. It may think:
+
+- delete `name`
+- create `full_name`
+
+instead of renaming it.
+
+In that case, you will need to edit the generated migration file manually before running `flask db upgrade`.
+
+# Adding a New Model
+
+Suppose you add:
+
+```python
+class Publisher(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+```
+
+Run:
+
+```bash
+cd project
+python3 -m flask db migrate -m "Added publisher table"
+```
+
+Then:
+
+```bash
+cd project
+python3 -m flask db upgrade
+```
+
+A new table is created without affecting the others.
+
+# Changing a Relationship
+
+Suppose you add:
+
+```python
+publisher_id = db.Column(
+    db.Integer,
+    db.ForeignKey("publisher.id")
+)
+```
+
+Again:
+
+```bash
+cd project
+python3 -m flask db migrate -m "Added publisher relationship"
+```
+
+Then:
+
+```bash
+cd project
+python3 -m flask db upgrade
+```
+
+# Viewing Your Migration History
+
+You can see all migrations:
+
+```bash
+cd project
+python3 -m flask db history
+```
+
+Current migration:
+
+```bash
+cd project
+python3 -m flask db current
+```
+
+# Going Back (Downgrade)
+
+If something goes wrong:
+
+```bash
+cd project
+python3 -m flask db downgrade
+```
+
+It undoes the last migration.
 
 
